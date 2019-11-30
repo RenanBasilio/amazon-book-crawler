@@ -17,7 +17,6 @@ After you get a copy of this codebase pulled down locally (either downloaded as 
 Then you'll need to go into the `settings.py` file and update a number of values:
 
  * **Database Name, Host and User** - Connection information for storing products in a postgres database
- * **Redis Host, Port and Database** - Connection information for storing the URL queue in redis
  * **Proxy List as well as User, Password and Port** - Connection information for your list of proxy servers
 
 Once you've updated all of your connection information, you'll need to run the following at the command line to setup the postgres table that will store the product records:

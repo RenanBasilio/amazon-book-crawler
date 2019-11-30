@@ -7,11 +7,6 @@ database = "amazon_crawler"
 host = ""
 user = ""
 
-# Redis
-redis_host = ""
-redis_port = 6379
-redis_db = 0
-
 # Request
 headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -41,5 +36,5 @@ max_threads = 200
 
 # Logging & Storage
 log_stdout = True
-image_dir = "/tmp/crawl_images"
-export_dir = "/tmp"
+image_dir = os.path.join(current_dir, "/results/images")
+export_dir = os.path.join(current_dir, "/results")

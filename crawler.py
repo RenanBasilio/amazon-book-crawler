@@ -1,5 +1,6 @@
 import sys
 from datetime import datetime
+from math import inf
 
 import eventlet
 
@@ -7,12 +8,12 @@ import settings
 from models import ProductRecord
 from helpers import make_request, log, format_url, enqueue_url, dequeue_url
 from extractors import get_title, get_url, get_price, get_primary_img
+from bs4 import BeautifulSoup
 
 crawl_time = datetime.now()
 
 pool = eventlet.GreenPool(settings.max_threads)
 pile = eventlet.GreenPile(pool)
-
 
 def begin_crawl():
 
@@ -24,30 +25,49 @@ def begin_crawl():
                 continue  # skip blank and commented out lines
 
             page, html = make_request(line)
-            count = 0
 
             # look for subcategory links on this page
-            subcategories = page.findAll("div", "bxc-grid__image")  # downward arrow graphics
-            subcategories.extend(page.findAll("li", "sub-categories__list__item"))  # carousel hover menu
-            sidebar = page.find("div", "browseBox")
-            if sidebar:
-                subcategories.extend(sidebar.findAll("li"))  # left sidebar
+            subcategories = crawl_subcategories(line, max_depth=1)
 
             for subcategory in subcategories:
-                link = subcategory.find("a")
-                if not link:
-                    continue
-                link = link["href"]
-                count += 1
-                enqueue_url(link)
+                enqueue_url(subcategory)
 
-            log("Found {} subcategories on {}".format(count, line))
+            log("Found {} subcategories on {}".format(subcategories.count(), line))
 
+def crawl_subcategories(url, recursive=True, max_depth=inf, depth=0):
+
+    page, html = make_request(url)
+
+    category =  page.find("span", {"class":"zg_selected"})
+    log("Crawling subcategory {}... (Depth {})".format(category.string, depth))
+
+    subcategories = category.parent.find_next_sibling("ul")
+
+    pages = []
+
+    if not subcategories or not recursive or depth >= max_depth:
+        # Essa e uma categoria folha, entao busca todas as paginas da categoria
+        pages.append(url)
+        pagination = page.find("ul", {"class":"a-pagination"})
+        if pagination:
+            subpages = pagination.find("li", {"class":"a-normal"}).find_all("a")
+            # Em cada subpagina, busca todos os produtos
+            for subpage in subpages:
+                pages.append(subpage["href"])
+    else:
+        # Essa e uma categoria intermediaria, entao busca todas as subcategorias recursivamente
+        depth += 1
+        for subcategory in subcategories.find_all("a"):
+            pages.extend(crawl_subcategories(subcategory["href"], recursive, max_depth, depth))
+
+    return pages
 
 def fetch_listing():
 
     global crawl_time
     url = dequeue_url()
+    
+    log("Crawling {}...".format(url))
     if not url:
         log("WARNING: No URLs found in the queue. Retrying...")
         pile.spawn(fetch_listing)

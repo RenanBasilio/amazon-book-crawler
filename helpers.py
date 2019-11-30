@@ -1,21 +1,26 @@
 import os
 import random
+import queue
+
 from datetime import datetime
-from urlparse import urlparse
+urlqueue = queue.Queue()
+
+from urllib.parse import urlparse
 
 import eventlet
 requests = eventlet.import_patched('requests.__init__')
 time = eventlet.import_patched('time')
-import redis
 
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 from requests.exceptions import RequestException
+from selenium import webdriver
 
 import settings
 
 num_requests = 0
-
-redis = redis.StrictRedis(host=settings.redis_host, port=settings.redis_port, db=settings.redis_db)
+options = webdriver.ChromeOptions()
+options.add_argument('--headless')
+driver = webdriver.Chrome(chrome_options=options)
 
 
 def make_request(url, return_soup=True):
@@ -32,21 +37,17 @@ def make_request(url, return_soup=True):
 
     proxies = get_proxy()
     try:
-        r = requests.get(url, headers=settings.headers, proxies=proxies)
+        driver.get(url)
+        html = driver.page_source
     except RequestException as e:
         log("WARNING: Request for {} failed, trying again.".format(url))
         return make_request(url)  # try request again, recursively
 
     num_requests += 1
 
-    if r.status_code != 200:
-        os.system('say "Got non-200 Response"')
-        log("WARNING: Got a {} status code for URL: {}".format(r.status_code, url))
-        return None
-
     if return_soup:
-        return BeautifulSoup(r.text), r.text
-    return r
+        return BeautifulSoup(html, features="html.parser"), html
+    return html
 
 
 def format_url(url):
@@ -54,7 +55,7 @@ def format_url(url):
     u = urlparse(url)
 
     scheme = u.scheme or "https"
-    host = u.netloc or "www.amazon.com"
+    host = u.netloc or "www.amazon.com.br"
     path = u.path
 
     if not u.query:
@@ -74,7 +75,7 @@ def log(msg):
     # global logging function
     if settings.log_stdout:
         try:
-            print "{}: {}".format(datetime.now(), msg)
+            print("{}: {}".format(datetime.now(), msg))
         except UnicodeEncodeError:
             pass  # squash logging errors in case of non-ascii text
 
@@ -100,14 +101,14 @@ def get_proxy():
 
 def enqueue_url(u):
     url = format_url(u)
-    return redis.sadd("listing_url_queue", url)
+    return urlqueue.put(url)
 
 
 def dequeue_url():
-    return redis.spop("listing_url_queue")
+    return urlqueue.get()
 
 
 if __name__ == '__main__':
     # test proxy server IP masking
     r = make_request('https://api.ipify.org?format=json', return_soup=False)
-    print r.text
+    print(r.text)
