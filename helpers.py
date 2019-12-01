@@ -1,9 +1,8 @@
 import os
 import random
-import queue
+import re
 
 from datetime import datetime
-urlqueue = queue.Queue()
 
 from urllib.parse import urlparse
 
@@ -19,14 +18,12 @@ import settings
 
 num_requests = 0
 options = webdriver.ChromeOptions()
-options.add_argument('--headless')
+#options.add_argument('--headless')
 driver = webdriver.Chrome(chrome_options=options)
 
 
 def make_request(url, return_soup=True):
     # global request building and response handling
-
-    url = format_url(url)
 
     if "picassoRedirect" in url:
         return None  # skip the redirect URLs
@@ -48,13 +45,17 @@ def make_request(url, return_soup=True):
         return BeautifulSoup(html, features="html.parser")
     return html
 
-def format_url(url):
+def clean_url(url):
+    return re.sub('\/ref.+', '', url)
+
+def format_url(url, base=None):
     # make sure URLs aren't relative, and strip unnecssary query args
     u = urlparse(url)
+    b = urlparse(base)
 
-    scheme = u.scheme or "https"
-    host = u.netloc or "www.amazon.com.br"
-    path = u.path
+    scheme = u.scheme or b.scheme or "https"
+    host = u.netloc or b.netloc or "www.amazon.com.br"
+    path = u.path or b.path
 
     if not u.query:
         query = ""
@@ -66,7 +67,7 @@ def format_url(url):
                 query += "{k}={v}&".format(**locals())
         query = query[:-1]
 
-    return "{scheme}://{host}{path}{query}".format(**locals())
+    return clean_url("{scheme}://{host}{path}{query}".format(**locals()))
 
 def log(msg):
     # global logging function
@@ -75,6 +76,12 @@ def log(msg):
             print("{}: {}".format(datetime.now(), msg))
         except UnicodeEncodeError:
             pass  # squash logging errors in case of non-ascii text
+
+def shutdown():
+    driver.close()
+
+def build_search_url(base, isbn):
+    return "{}/s?i=stripbooks&rh=p_66%3A{}&s=relevanceexprank&Adv-Srch-Books-Submit.x=16&Adv-Srch-Books-Submit.y=15&unfiltered=1&ref=sr_adv_b".format(base, isbn)
 
 if __name__ == '__main__':
     # test proxy server IP masking

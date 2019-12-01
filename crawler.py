@@ -6,7 +6,8 @@ import re
 
 import settings
 from models import Produto
-from helpers import make_request, log, format_url
+from helpers import make_request, log, format_url, shutdown
+from scraper import run_test
 from extractors import get_title, get_url, get_primary_img, get_isbn, get_author
 from bs4 import BeautifulSoup
 
@@ -76,12 +77,28 @@ def parse_listings(page):
             )
             product.save()
 
-            print("Found {} [ Title: {}, Author: {}, Isbn: {} ]".format(product.url, product.title, product.autor, product.isbn))
-
         print("Found {} listings.".format(len(listings)))
 
 if __name__ == '__main__':
 
-    if len(sys.argv) > 1 and sys.argv[1] == "start":
-        log("Seeding the URL frontier with subcategory URLs")
-        begin_crawl()  # put a bunch of subcategory URLs into the queue
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "start":
+            log("Seeding the URL frontier with subcategory URLs")
+            begin_crawl()
+
+        elif sys.argv[1] == "update" and len(sys.argv) > 2 and sys.argv[2]:
+                log("Retrieving specified products from database...")
+                for productId in sys.argv[2:]:
+                    exit() # scrape product page
+
+        elif sys.argv[1] == "test":
+            log("Running search and information extraction test...")
+            run_test()
+        else:
+            log("No products supplied to update method.")
+
+    else:
+        log("Starting full database update...")
+
+    log("Done")
+    shutdown()

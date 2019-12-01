@@ -3,7 +3,6 @@ import re
 
 htmlparser = HTMLParser()
 
-
 def get_title(item):
     title = item.find("div", {"class":"p13n-sc-truncated"})
     
@@ -40,6 +39,19 @@ def get_author(item):
     else:
         return "<missing author>"
 
+def get_price(item):
+    price = item.find("span", {"class":"offer-price"}).string
+    if price:
+        return price
+    else:
+        return None
+
+def get_top_search_result(item):
+    results = item.find("div", {"class":"s-search-results"})
+    if results:
+        return item.find_all("div", {"class":"s-result-item"})[0]
+    else:
+        return None
 
 def get_primary_img(item):
     thumb = item.find("img", "s-access-image")
