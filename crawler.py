@@ -2,7 +2,6 @@ import sys
 from datetime import datetime
 from math import inf
 
-import eventlet
 import re
 
 import settings
@@ -12,9 +11,6 @@ from extractors import get_title, get_url, get_primary_img, get_isbn, get_author
 from bs4 import BeautifulSoup
 
 crawl_time = datetime.now()
-
-pool = eventlet.GreenPool(settings.max_threads)
-pile = eventlet.GreenPile(pool)
 
 def begin_crawl():
 
@@ -88,6 +84,3 @@ if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == "start":
         log("Seeding the URL frontier with subcategory URLs")
         begin_crawl()  # put a bunch of subcategory URLs into the queue
-
-    #log("Beginning crawl at {}".format(crawl_time))
-    #pool.waitall()
