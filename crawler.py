@@ -24,7 +24,7 @@ def begin_crawl():
             page = make_request(line)
 
             # look for subcategory links on this page
-            subcategories = crawl_subcategories(line)
+            subcategories = crawl_subcategories(line, max_depth=settings.max_category_depth)
 
             log("Found {} subcategories on {}".format(subcategories.count(), line))
 

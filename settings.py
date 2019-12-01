@@ -20,6 +20,7 @@ allowed_params = ["node", "rh", "page"]
 start_file = os.path.join(current_dir, "start-urls.txt")
 max_requests = 2 * 10**6  # two million
 max_details_per_listing = 9999
+max_category_depth=1
 
 # Logging & Storage
 log_stdout = True
