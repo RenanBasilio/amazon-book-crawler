@@ -1,7 +1,4 @@
-from html.parser import HTMLParser
 import re
-
-htmlparser = HTMLParser()
 
 def get_title(item):
     title = item.find("div", {"class":"p13n-sc-truncated"})
@@ -54,16 +51,8 @@ def get_top_search_result(item):
         return None
 
 def get_primary_img(item):
-    thumb = item.find("img", "s-access-image")
+    thumb = item.find("img")
     if thumb:
-        src = thumb["src"]
-
-        p1 = src.split("/")
-        p2 = p1[-1].split(".")
-
-        base = p2[0]
-        ext = p2[-1]
-
-        return "/".join(p1[:-1]) + "/" + base + "." + ext
-
-    return None
+        return thumb["src"]
+    else:
+        return None

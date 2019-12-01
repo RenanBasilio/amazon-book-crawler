@@ -1,40 +1,31 @@
 import sys
 import io
+import os
 from datetime import datetime
 
+import settings
 from models import Produto
-from helpers import make_request, log, build_search_url, format_url
-from extractors import get_url, get_top_search_result, get_price
+from helpers import make_request, log, build_search_url, format_url, download_image
+from extractors import get_title, get_url, get_isbn, get_author, get_price, get_primary_img, get_top_search_result
 
-def run_test():
-    test_product = Produto(
-        "Practical Web Scraping for Data Science: Best Practices and Examples with Python",
-        "https://www.amazon.com.br/Practical-Web-Scraping-Data-Science/dp/1484235819",
-        "1484235819",
-        "Seppe vanden Broucke",
-        datetime.now()
-    )
+def scrape_listings(page):
+    listings = page.find_all("li", {"class":"zg-item-immersion"})
 
-    urls = [test_product.url]
-    urls.extend(find_foreign(test_product.isbn))
+    if listings:
+        for listing in listings:
+            product = Produto(
+                title = get_title(listing),
+                url=format_url(get_url(listing)),
+                isbn=get_isbn(listing),
+                autor=get_author(listing),
+                crawl_time=datetime.now()
+            )
+            productid = product.save()
 
-    log("Found the following urls for the product: {}".format(urls))
+            if not os.path.isfile(os.path.join(settings.image_dir, product.isbn+".jpg")):
+                download_image(get_primary_img(listing), product.isbn+".jpg")
 
-    for url in urls:
-        price = scrape_price(url)
-        if price:
-            log("Found price for product at {}: {}".format(url, price))
-
-
-
-def find_foreign(isbn):
-    url = build_search_url("https://www.amazon.com", isbn)
-    page = make_request(url)
-    search_result = get_top_search_result(page)
-    if (search_result):
-        return [format_url(get_url(search_result), "https://www.amazon.com")]
-    else: 
-        return []
+        print("Found {} listings.".format(len(listings)))
 
 def scrape_price(url):
     page = make_request(format_url(url))

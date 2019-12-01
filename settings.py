@@ -24,5 +24,5 @@ max_category_depth=1
 
 # Logging & Storage
 log_stdout = True
-image_dir = os.path.join(current_dir, "/results/images")
-export_dir = os.path.join(current_dir, "/results")
+image_dir = os.path.join(current_dir, "results", "images")
+export_dir = os.path.join(current_dir, "results")

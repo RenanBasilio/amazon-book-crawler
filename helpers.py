@@ -1,6 +1,8 @@
 import os
 import random
 import re
+import requests
+import shutil
 
 from datetime import datetime
 
@@ -44,6 +46,13 @@ def make_request(url, return_soup=True):
     if return_soup:
         return BeautifulSoup(html, features="html.parser")
     return html
+
+def download_image(url, filename):
+    r = requests.get(url=url, stream=True)
+    if r.status_code == 200:
+        with open(os.path.join(settings.image_dir, filename), 'wb') as f:
+            r.raw.decode_content = True
+            shutil.copyfileobj(r.raw, f)
 
 def clean_url(url):
     return re.sub('\/ref.+', '', url)

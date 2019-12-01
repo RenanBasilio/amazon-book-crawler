@@ -1,20 +1,18 @@
 import sys
+import os
+import re
 from datetime import datetime
 from math import inf
 
-import re
-
 import settings
 from models import Produto
-from helpers import make_request, log, format_url, shutdown
-from scraper import run_test
-from extractors import get_title, get_url, get_primary_img, get_isbn, get_author
-from bs4 import BeautifulSoup
+from helpers import make_request, log, format_url, build_search_url, shutdown
+from scraper import scrape_listings, scrape_price
+from extractors import get_top_search_result, get_url
 
 crawl_time = datetime.now()
 
 def begin_crawl():
-
     # explode out all of our category `start_urls` into subcategories
     with open(settings.start_file, "r") as f:
         for line in f:
@@ -46,10 +44,10 @@ def crawl_subcategories(url, recursive=True, max_depth=inf, depth=0):
         pagination = page.find("ul", {"class":"a-pagination"})
         if pagination:
             subpages = pagination.find("li", {"class":"a-normal"}).find_all("a")
-            parse_listings(page)
+            scrape_listings(page)
             # Em cada subpagina, busca todos os produtos
             for subpage in subpages:
-                parse_listings(make_request(subpage["href"]))
+                scrape_listings(make_request(subpage["href"]))
 
     else:
         # Essa e uma categoria intermediaria, entao busca todas as subcategorias recursivamente
@@ -59,25 +57,33 @@ def crawl_subcategories(url, recursive=True, max_depth=inf, depth=0):
 
     return pages
 
-def parse_listings(page):
+def find_foreign(isbn):
+    url = build_search_url("https://www.amazon.com", isbn)
+    page = make_request(url)
+    search_result = get_top_search_result(page)
+    if search_result:
+        return [format_url(get_url(search_result), "https://www.amazon.com")]
+    else: 
+        return []
 
-    global crawl_time
+def run_test():
+    test_product = Produto(
+        "Practical Web Scraping for Data Science: Best Practices and Examples with Python",
+        "https://www.amazon.com.br/Practical-Web-Scraping-Data-Science/dp/1484235819",
+        "1484235819",
+        "Seppe vanden Broucke",
+        datetime.now()
+    )
 
-    urls = []
-    listings = page.find_all("li", {"class":"zg-item-immersion"})
+    urls = [test_product.url]
+    urls.extend(find_foreign(test_product.isbn))
 
-    if listings:
-        for listing in listings:
-            product = Produto(
-                title = get_title(listing),
-                url=format_url(get_url(listing)),
-                isbn=get_isbn(listing),
-                autor=get_author(listing),
-                crawl_time=datetime.now()
-            )
-            product.save()
+    log("Found the following urls for the product: {}".format(urls))
 
-        print("Found {} listings.".format(len(listings)))
+    for url in urls:
+        price = scrape_price(url)
+        if price:
+            log("Found price for product at {}: {}".format(url, price))
 
 if __name__ == '__main__':
 
@@ -87,7 +93,7 @@ if __name__ == '__main__':
             begin_crawl()
 
         elif sys.argv[1] == "update" and len(sys.argv) > 2 and sys.argv[2]:
-                log("Retrieving specified products from database...")
+                log("Retrieving specified product IDs from database...")
                 for productId in sys.argv[2:]:
                     exit() # scrape product page
 
