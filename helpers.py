@@ -35,7 +35,6 @@ def make_request(url, return_soup=True):
     if num_requests >= settings.max_requests:
         raise Exception("Reached the max number of requests: {}".format(settings.max_requests))
 
-    proxies = get_proxy()
     try:
         driver.get(url)
         html = driver.page_source
@@ -46,9 +45,8 @@ def make_request(url, return_soup=True):
     num_requests += 1
 
     if return_soup:
-        return BeautifulSoup(html, features="html.parser"), html
+        return BeautifulSoup(html, features="html.parser")
     return html
-
 
 def format_url(url):
     # make sure URLs aren't relative, and strip unnecssary query args
@@ -70,7 +68,6 @@ def format_url(url):
 
     return "{scheme}://{host}{path}{query}".format(**locals())
 
-
 def log(msg):
     # global logging function
     if settings.log_stdout:
@@ -78,35 +75,6 @@ def log(msg):
             print("{}: {}".format(datetime.now(), msg))
         except UnicodeEncodeError:
             pass  # squash logging errors in case of non-ascii text
-
-
-def get_proxy():
-    # choose a proxy server to use for this request, if we need one
-    if not settings.proxies or len(settings.proxies) == 0:
-        return None
-
-    proxy_ip = random.choice(settings.proxies)
-    proxy_url = "socks5://{user}:{passwd}@{ip}:{port}/".format(
-        user=settings.proxy_user,
-        passwd=settings.proxy_pass,
-        ip=proxy_ip,
-        port=settings.proxy_port,
-
-    )
-    return {
-        "http": proxy_url,
-        "https": proxy_url
-    }
-
-
-def enqueue_url(u):
-    url = format_url(u)
-    return urlqueue.put(url)
-
-
-def dequeue_url():
-    return urlqueue.get()
-
 
 if __name__ == '__main__':
     # test proxy server IP masking

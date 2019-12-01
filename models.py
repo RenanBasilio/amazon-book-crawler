@@ -6,15 +6,13 @@ import settings
 #cur = conn.cursor()
 
 
-class ProductRecord(object):
-    """docstring for ProductRecord"""
-    def __init__(self, title, product_url, listing_url, price, primary_img, crawl_time):
-        super(ProductRecord, self).__init__()
+class Produto(object):
+    def __init__(self, title, url, isbn, autor, crawl_time):
+        super(Produto, self).__init__()
         self.title = title
-        self.product_url = product_url
-        self.listing_url = listing_url
-        self.price = price
-        self.primary_img = primary_img
+        self.url = url
+        self.isbn = isbn
+        self.autor = autor
         self.crawl_time = crawl_time
 
     def save(self):

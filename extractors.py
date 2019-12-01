@@ -1,29 +1,44 @@
 from html.parser import HTMLParser
+import re
 
 htmlparser = HTMLParser()
 
 
 def get_title(item):
-    title = item.find("h2", "s-access-title")
+    title = item.find("div", {"class":"p13n-sc-truncated"})
+    
+    if title.has_attr("title"):
+        title = title["title"]
+    else:
+        title = title.string
+
     if title:
-        return htmlparser.unescape(title.text.encode("utf-8"))
+        return title
     else:
         return "<missing product title>"
 
 
 def get_url(item):
-    link = item.find("a", "s-access-detail-page")
+    link = item.find("a", {"class":"a-link-normal"})
     if link:
         return link["href"]
     else:
         return "<missing product url>"
 
 
-def get_price(item):
-    price = item.find("span", "s-price")
-    if price:
-        return price.text
-    return None
+def get_isbn(item):
+    isbn = re.search("(?<=\/dp\/)[^\/]+", item.find("a", {"class":"a-link-normal"})["href"])
+    if isbn:
+        return isbn.group()
+    else:
+        return None
+
+def get_author(item):
+    author = item.find("a", {"class":"a-link-normal"}).find_next_sibling().find("span").string
+    if author:
+        return author
+    else:
+        return "<missing author>"
 
 
 def get_primary_img(item):
