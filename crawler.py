@@ -49,7 +49,7 @@ def crawl_subcategories(url, recursive=True, max_depth=inf, depth=0):
             # Em cada subpagina, busca todos os produtos
             for subpage in subpages:
                 parse_listings(make_request(subpage["href"]))
-                
+
     else:
         # Essa e uma categoria intermediaria, entao busca todas as subcategorias recursivamente
         depth += 1
@@ -74,6 +74,7 @@ def parse_listings(page):
                 autor=get_author(listing),
                 crawl_time=datetime.now()
             )
+            product.save()
 
             print("Found {} [ Title: {}, Author: {}, Isbn: {} ]".format(product.url, product.title, product.autor, product.isbn))
 

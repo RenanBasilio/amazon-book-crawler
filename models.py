@@ -2,9 +2,8 @@ import psycopg2
 
 import settings
 
-#conn = psycopg2.connect(database=settings.database, host=settings.host, user=settings.user)
-#cur = conn.cursor()
-
+conn = psycopg2.connect(database=settings.database, host=settings.host, user=settings.user)
+cur = conn.cursor()
 
 class Produto(object):
     def __init__(self, title, url, isbn, autor, crawl_time):
@@ -26,6 +25,16 @@ class Produto(object):
         # ))
         # conn.commit()
         # return cur.fetchone()[0]
+
+        cur.execute("INSERT INTO products_temp (title, product_url, isbn, authors) VALUES (%s, %s, %s, %s) RETURNING id", (
+            self.title,
+            self.url,
+            self.isbn,
+            self.autor,
+        ))
+        conn.commit()
+        return cur.fetchone()[0]
+
         print(self.title)
 
 
@@ -43,4 +52,15 @@ if __name__ == '__main__':
     #     crawl_time timestamp
     # );""")
     # conn.commit()
+
+    cur.execute("DROP TABLE IF EXISTS products_temp")
+    cur.execute("""CREATE TABLE products_temp (
+        id          serial PRIMARY KEY,
+        title       varchar(2056),
+        product_url         varchar(2056),
+        isbn varchar(2056),
+        authors       varchar(128)
+    );""")
+    conn.commit()
+
     print ("Hello, World!")
