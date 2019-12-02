@@ -15,17 +15,6 @@ class Produto(object):
         self.crawl_time = crawl_time
 
     def save(self):
-        # cur.execute("INSERT INTO products (title, product_url, listing_url, price, primary_img, crawl_time) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id", (
-        #     self.title,
-        #     self.product_url,
-        #     self.listing_url,
-        #     self.price,
-        #     self.primary_img,
-        #     self.crawl_time,
-        # ))
-        # conn.commit()
-        # return cur.fetchone()[0]
-
         cur.execute("INSERT INTO products_temp (title, product_url, isbn, authors) VALUES (%s, %s, %s, %s) RETURNING id", (
             self.title,
             self.url,
@@ -37,22 +26,29 @@ class Produto(object):
 
         print(self.title)
 
+class Preco(object):
+    def __init__(self, url, value, position):
+        super(Preco, self).__init__()
+        self.url = url
+        self.value = value
+        self.position = position
+
+    def save(self):
+        cur.execute("INSERT INTO prices_temp (url, value, position) VALUES (%s, %s, %s) RETURNING id", (
+            self.url,
+            self.value,
+            1,
+            # self.position,
+        ))
+        conn.commit()
+        return cur.fetchone()[0]
+
+        print(self.title)
+
 
 if __name__ == '__main__':
 
     # setup tables
-    # cur.execute("DROP TABLE IF EXISTS products")
-    # cur.execute("""CREATE TABLE products (
-    #     id          serial PRIMARY KEY,
-    #     title       varchar(2056),
-    #     product_url         varchar(2056),
-    #     listing_url varchar(2056),
-    #     price       varchar(128),
-    #     primary_img varchar(2056),
-    #     crawl_time timestamp
-    # );""")
-    # conn.commit()
-
     cur.execute("DROP TABLE IF EXISTS products_temp")
     cur.execute("""CREATE TABLE products_temp (
         id          serial PRIMARY KEY,

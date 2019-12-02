@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 
 import settings
-from models import Produto
+from models import Produto, Preco
 from helpers import make_request, log, build_search_url, format_url, download_image
 from extractors import get_title, get_url, get_isbn, get_author, get_price, get_primary_img, get_top_search_result
 
@@ -29,4 +29,9 @@ def scrape_listings(page):
 
 def scrape_price(url):
     page = make_request(format_url(url))
-    return get_price(page)
+    preco = Preco(
+        url = url,
+        value = get_price(page),
+        position = 1
+    )
+    precoid = preco.save()

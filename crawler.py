@@ -63,7 +63,7 @@ def find_foreign(isbn):
     search_result = get_top_search_result(page)
     if search_result:
         return [format_url(get_url(search_result), "https://www.amazon.com")]
-    else: 
+    else:
         return []
 
 def run_test():
@@ -84,6 +84,7 @@ def run_test():
         price = scrape_price(url)
         if price:
             log("Found price for product at {}: {}".format(url, price))
+            
 
 if __name__ == '__main__':
 
