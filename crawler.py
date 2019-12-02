@@ -7,7 +7,7 @@ from math import inf
 import settings
 from models import Produto
 from helpers import make_request, log, format_url, build_search_url, shutdown
-from scraper import scrape_listings, scrape_price
+from scraper import scrape_listings, scrape_product
 from extractors import get_top_search_result, get_url
 
 crawl_time = datetime.now()
@@ -81,9 +81,7 @@ def run_test():
     log("Found the following urls for the product: {}".format(urls))
 
     for url in urls:
-        price = scrape_price(url)
-        if price:
-            log("Found price for product at {}: {}".format(url, price))
+        price = scrape_product(url)
             
 
 if __name__ == '__main__':

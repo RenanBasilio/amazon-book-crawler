@@ -56,3 +56,11 @@ def get_primary_img(item):
         return thumb["src"]
     else:
         return None
+
+def get_rank(item):
+    details = item.select("li#SalesRank")[0]
+    if details:
+        rank = re.match("^[^\d]*(\d+.\d+)", details.get_text()).group(1)
+        return int(rank.replace(',', ''))
+    else:
+        return None
