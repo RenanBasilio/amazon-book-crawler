@@ -45,6 +45,31 @@ class Preco(object):
 
         print(self.title)
 
+class Lista():
+    def load():
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM listagem")
+        products = []
+        for row in cur:
+            products.append(row)
+        return products
+
+class Link(object):
+    def __init__(self, url, isbn):
+        super(Link, self).__init__()
+        self.url = url
+        self.isbn = isbn
+
+    def save(self):
+        cur.execute("INSERT INTO list_us_temp (url, isbn) VALUES (%s, %s) RETURNING 1", (
+            self.url,
+            self.isbn,
+        ))
+        conn.commit()
+        return cur.fetchone()[0]
+
+        print(self.title)
+
 
 if __name__ == '__main__':
 

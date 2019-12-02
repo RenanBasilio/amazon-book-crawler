@@ -2,7 +2,7 @@ import re
 
 def get_title(item):
     title = item.find("div", {"class":"p13n-sc-truncated"})
-    
+
     if title.has_attr("title"):
         title = title["title"]
     else:
@@ -37,18 +37,18 @@ def get_author(item):
         return "<missing author>"
 
 def get_price(item):
-    price = item.find("span", {"class":"offer-price"}).string
-    if price:
+    try:
+        price = item.find("span", {"class":"offer-price"}).string
         return price
-    else:
-        return None
+    except:
+        return 0
 
 def get_top_search_result(item):
-    results = item.find("div", {"class":"s-search-results"})
-    if results:
+    try:
+        results = item.find("div", {"class":"s-search-results"})
         return item.find_all("div", {"class":"s-result-item"})[0]
-    else:
-        return None
+    except:
+        return 0
 
 def get_primary_img(item):
     thumb = item.find("img")

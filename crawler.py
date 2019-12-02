@@ -5,7 +5,7 @@ from datetime import datetime
 from math import inf
 
 import settings
-from models import Produto
+from models import Produto, Lista
 from helpers import make_request, log, format_url, build_search_url, shutdown
 from scraper import scrape_listings, scrape_price
 from extractors import get_top_search_result, get_url
@@ -67,24 +67,19 @@ def find_foreign(isbn):
         return []
 
 def run_test():
-    test_product = Produto(
-        "Practical Web Scraping for Data Science: Best Practices and Examples with Python",
-        "https://www.amazon.com.br/Practical-Web-Scraping-Data-Science/dp/1484235819",
-        "1484235819",
-        "Seppe vanden Broucke",
-        datetime.now()
-    )
+    products = Lista.load()
 
-    urls = [test_product.url]
-    urls.extend(find_foreign(test_product.isbn))
 
-    log("Found the following urls for the product: {}".format(urls))
+    for test_product in products:
+        urls = [test_product[1]]
+        urls.extend(find_foreign(test_product[0]))
+        log("Found the following urls for the product: {}".format(urls))
 
-    for url in urls:
-        price = scrape_price(url)
-        if price:
-            log("Found price for product at {}: {}".format(url, price))
-            
+        for url in urls:
+            price = scrape_price(url)
+            if price:
+                log("Found price for product at {}: {}".format(url, price))
+
 
 if __name__ == '__main__':
 
