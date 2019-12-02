@@ -1,6 +1,7 @@
 import psycopg2
 
 import settings
+from helpers import log
 
 conn = psycopg2.connect(database=settings.database, host=settings.host, user=settings.user)
 cur = conn.cursor()
@@ -15,16 +16,15 @@ class Produto(object):
         self.crawl_time = crawl_time
 
     def save(self):
+        log("Found {} [ Title: {}, Author: {}, Isbn: {} ]".format(self.url, self.title, self.autor, self.isbn))
         cur.execute("INSERT INTO products_temp (title, product_url, isbn, authors) VALUES (%s, %s, %s, %s) RETURNING id", (
             self.title,
             self.url,
             self.isbn,
-            self.autor,
+            self.autor
         ))
         conn.commit()
         return cur.fetchone()[0]
-
-        print(self.title)
 
 class Preco(object):
     def __init__(self, url, value, position):
@@ -34,11 +34,11 @@ class Preco(object):
         self.position = position
 
     def save(self):
+        log("Found price for product {}: {} (ranked {})".format(self.url, self.value, self.position))
         cur.execute("INSERT INTO prices_temp (url, value, position) VALUES (%s, %s, %s) RETURNING id", (
             self.url,
             self.value,
-            1,
-            # self.position,
+            self.position
         ))
         conn.commit()
         return cur.fetchone()[0]
